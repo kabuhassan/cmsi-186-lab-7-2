@@ -32,6 +32,58 @@ public class Maze {
         // perfectly rectanglar, not contain any illegal characters, have exactly
         // one rat (not less, not more), and have exactly one cheese (not less,
         // not more).
+
+        int len = lines[0].length();
+
+
+        this.cells = new Cell[lines.length][len];
+        this.initialCheeseLocation = null;
+        this.initialRatLocation = null;
+
+
+        for (int i = 0; i < lines.length; i++) {
+            if(lines[i].length() != len){
+                throw new IllegalArgumentException("Non-rectangular maze");
+            }
+            var Chars = lines[i].toCharArray(); 
+            for (int j = 0; j < Chars.length; j++) {
+                switch  (Chars[j]){
+                    case 'o':
+                        this.cells[i][j] = Maze.Cell.OPEN;
+                        break;
+                    case 'w':
+                        this.cells[i][j] = Maze.Cell.WALL;
+                        break;
+                    case 'r':
+                        this.cells[i][j] = Maze.Cell.RAT;
+                        if(this.initialRatLocation == null){
+                            this.initialRatLocation = new Location(i, j);
+                        }else{
+                            throw new IllegalArgumentException("Maze can only have one rat");
+                        }  
+                        break;
+                    case 'c':
+                        this.cells[i][j] = Maze.Cell.CHEESE;
+                        if(this.initialCheeseLocation == null){
+                            this.initialCheeseLocation = new Location(i, j);
+                        }else{
+                            throw new IllegalArgumentException("Maze can only have one cheese");
+                        }
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknowen cell kind!!!!");
+                                       
+                }
+            }
+        }
+
+        if(this.initialRatLocation == null){
+            throw new IllegalArgumentException("Maze has no rat");
+        }
+        
+        if(this.initialCheeseLocation == null){
+            throw new IllegalArgumentException("Maze has no cheese");
+        }
     }
 
     public static Maze fromString(final String description) {
@@ -43,10 +95,14 @@ public class Maze {
     }
 
     public static Maze fromScanner(final Scanner scanner) {
-        // TODO: Fill this in. You will want to read line-by-line from the scanner
-        // storing each line in an array of strings, then turn the list into
-        // an array and pass that to the Maze constructor. Return the newly
-        // constructed maze from this method.
+
+        var listStrings = new ArrayList<String>(); 
+
+        while(scanner.hasNext()){
+            listStrings.add(scanner.nextLine());
+        }
+
+        return new Maze((String[])listStrings.toArray());
     }
 
     /**
@@ -60,39 +116,43 @@ public class Maze {
         private final int column;
 
         Location(final int row, final int column) {
-            // TODO: Fill this in, it's pretty easy.
+            this.row = row;
+            this.column = column;
         }
 
         boolean isInMaze() {
-            // TODO: Fill this in. Return whether the row and column is a legal
-            // position in this maze.
+            int errors = 0;
+            if((this.row < 0) || (this.row >= getHeight())){
+                errors++;
+            }
+            if((this.column < 0) || (this.column >= getWidth())){
+                errors++;
+            }
+            return errors == 0; 
         }
 
         boolean canBeMovedTo() {
-            // TODO: Fill this in. You can move to a space only if it is inside the
-            // maze and the cell is open or contains the cheese.
+            return isInMaze() && (hasCheese() || (contents() == Maze.Cell.OPEN));
         }
 
         boolean hasCheese() {
-            // TODO: Fill this in. Returns whether the cell has the cheese. You can
-            // use the contents() method to help you here.
+            return contents() == Maze.Cell.CHEESE;
         }
 
         Location above() {
-            // TODO: Fill this in. It should return a new location whose coordinates
-            // are (1) the row above this location's row, and (2) the same column.
+            return new Location(this.row - 1, this.column);
         }
 
         Location below() {
-            // TODO: Fill this in. Return the location directly below this one.
+            return new Location(this.row + 1, this.column);
         }
 
         Location toTheLeft() {
-            // TODO: Fill this in. Return the location directly to the left of this one.
+            return new Location(this.row, this.column - 1);
         }
 
         Location toTheRight() {
-            // TODO: Fill this in. Return the location directly to the right of this one.
+            return new Location(this.row, this.column + 1);
         }
 
         void place(Cell cell) {
@@ -104,8 +164,7 @@ public class Maze {
         }
 
         boolean isAt(final Location other) {
-            // TODO: Fill this in. Returns whether this location and the other location have
-            // the same row and column values.
+            return (this.row == other.row) && (this.column == other.column);
         }
     }
 
@@ -117,8 +176,16 @@ public class Maze {
     public static enum Cell {
         OPEN(' '), WALL('\u2588'), TRIED('x'), PATH('.'), RAT('r'), CHEESE('c');
 
-        // This needs a constructor and a toString method. You might need to do some
-        // research on Java enums.
+        private char kind;
+ 
+        public String toString(){
+            return "" + this.kind;
+        }
+    
+        // enum constructor - can not be public or protected
+        Cell(char kind){
+            this.kind = kind;
+        }
     }
 
     public interface MazeListener {
@@ -126,20 +193,19 @@ public class Maze {
     }
 
     public int getWidth() {
-        // TODO: Fill this in. The information comes from the cells array.
+        return cells[0].length;
     }
 
     public int getHeight() {
-        // TODO: Fill this in
+        return cells.length;
     }
 
     public Location getInitialRatPosition() {
-        // TODO: Fill this in. It is a typical getter, since you already have a field
-        // for the initial rat position.
+        return this.initialRatLocation;
     }
 
     public Location getInitialCheesePosition() {
-        // TODO: Fill this in
+        return this.initialCheeseLocation;
     }
 
     /**

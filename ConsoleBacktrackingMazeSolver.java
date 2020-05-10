@@ -29,6 +29,7 @@ public class ConsoleBacktrackingMazeSolver {
             }
             var maze = (args.length == 1) ? Maze.fromFile(args[0])
                     : Maze.fromScanner(new Scanner(System.in));
+
             var success = new BacktrackingMazeSolver().solve(maze, listener);
             System.out.println(success ? "Made it! " : "Poor ratty!");
         } catch (Exception e) {
@@ -36,3 +37,4 @@ public class ConsoleBacktrackingMazeSolver {
         }
     }
 }
+
